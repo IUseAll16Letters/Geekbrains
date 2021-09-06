@@ -12,9 +12,9 @@ product_id = 0
 while True:
     product_id += 1
     product = (product_id, {'name': input('Enter the product name (e.g. Toaster): '),
-                         'price': int(input('Enter product price: ')),
-                         'units': input('Enter product storage unit (e.g. pcs, kilos etc.): '),
-                         'stock': int(input('Enter amount of product in stock: '))}
+                            'price': int(input('Enter product price: ')),
+                            'units': input('Enter product storage unit (e.g. pcs, kilos etc.): '),
+                            'stock': int(input('Enter amount of product in stock: '))}
                )
     goods.append(product)
     if input('Do you want to add another product? (yes/no) ') == 'yes':
