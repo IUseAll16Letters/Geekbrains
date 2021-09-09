@@ -17,8 +17,8 @@ n = random_word(3, 10)
 s = random_word(3, 15)
 y = int(r(1901, 2002))
 c = '-'.join((random_word(3, 10) for _ in range(choice([1, 1, 1, 2]))))
-e = f'{random_word(3, 15)}@{random_word(2, 4)}.{random_word(2, 3)}'
-p = f"+{r(1,9)}({''.join(str(r(0, 9)) for i in range(3))}){''.join(str(r(0, 9)) for i in range(7))}"
+e = f'{s}.{n}@{random_word(2, 4).lower()}.{random_word(2, 3).lower()}'
+p = f"+{r(1,9)}({''.join(str(r(0, 9)) for _ in range(3))}){''.join(str(r(0, 9)) for _ in range(7))}"
 
 
 print(user_info(n, s, y, c, e, p))

@@ -6,7 +6,7 @@ def division(x, y):
     try:
         if y == '0':
             print("Wrong input, divisor can't be 0. ")
-            if input('Want re-enter the numbers? ') in 'yesYES':
+            if input('Want re-enter the numbers? ').lower() in 'yes':
                 return division(input('Enter dividend: '), input('Enter divisor: '))
             else:
                 return 'Quit. '
@@ -15,7 +15,7 @@ def division(x, y):
             return round(x / y, 5)
     except ValueError:
         print('Wrong input. Expected number. ')
-        if input('Want re-enter the numbers? ') in 'yesYES':
+        if input('Want re-enter the numbers? ').lower() in 'yes':
             return division(input('Enter dividend: '), input('Enter divisor: '))
         else:
             return 'Quit. '
