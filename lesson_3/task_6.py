@@ -21,9 +21,9 @@ def int_func(word):
 
 
 def capitalize_line(line):
+    latin_alphabet = 'abcdefghijklmnopqrstuvwxyz'
     line = line.split()
-    return ' '.join(int_func(wrd) for wrd in line)
-
+    return ' '.join(int_func(wrd) for wrd in line if not set(wrd).difference(latin_alphabet))
 
 # Solution 2 - Lambda
 lines = lambda seq: ' '.join(word.capitalize() for word in seq.split())
