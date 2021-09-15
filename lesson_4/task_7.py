@@ -6,6 +6,7 @@
 import functools
 
 
+# Solution 0: from math import factorial
 # Solution 1
 def conseq_multiplication(el_p, el):
     return el_p * el
