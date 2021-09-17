@@ -1,0 +1,10 @@
+Gilmour 34000
+'Slash' 30000
+May 35000
+Hendrix 28000
+Clapton 19000
+Van Hallen 22500
+Page 19999
+Beck 33000
+Santana 19500
+Young 25000
