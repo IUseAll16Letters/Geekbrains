@@ -18,16 +18,24 @@ FILE_NAME = 'task_7.txt'
 #         F.write(f"{input('Comp.name: ')} {random.choice(OWNERSHIP)} {random.randrange(10000, 25000, 1000)} "
 #                 f"{random.randrange(10000, 20000, 1000)}\n")
 
+
 with open(FILE_NAME, 'r', encoding='UTF-8') as F:
     result = [{}, {'average_profit': 0}]
+
     for line in F.readlines():
         line = line.split()
         profit = int(line[2]) - int(line[3])
         print("{:>20} results are following: {:>5} units. ".format(line[0] + ' ' + line[1], profit))
+        result[0][line[0]] = profit
         if profit > 0:
-            result[0][line[0]] = profit
             result[1]['average_profit'] += profit
-    result[1]['average_profit'] /= len(result[0].keys())
+
+    profitable_companies = sum(1 for _, profit in result[0].items() if profit > 0)
+    if profitable_companies > 0:
+        result[1]['average_profit'] //= profitable_companies
+    else:
+        result[1]['average_profit'] = "Impossible to calculate average. No profitable companies"
+
 
 with open('task_7.json', 'w') as J:
     json.dump(result, J)
