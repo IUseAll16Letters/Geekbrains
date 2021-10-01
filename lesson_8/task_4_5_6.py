@@ -29,6 +29,18 @@ class NotEnoughItems(TypeError):
         return f'Missing items - {self.text}'
 
 
+def _amount_validation(obj, required_type, result=1):
+    try:
+        if not isinstance(obj, required_type):
+            raise WrongDataPassed('')
+        else:
+            return obj
+    except WrongDataPassed as W:
+        print(f'{W}\n', f'\033[93mWrong data passed in amount variable expected int, got: {type(obj)}. '
+                        f'Amount value set to default. \003')
+        return result
+
+
 class Warehouse:
     """
     Ochen nehoroshaya realisatsiya sklada cherez slovar'. Mojno bilo sdelat cherez list,
@@ -49,6 +61,10 @@ class Warehouse:
     def storage(self):
         return self.__storage
 
+    @property
+    def accounting(self):
+        return self._accounting
+
     def store(self, item):
         """
         Function to accept items to the storage
@@ -63,10 +79,10 @@ class Warehouse:
             """
             if sample.__class__.__name__ in self.storage.keys():
                 self.storage[sample.__class__.__name__].append(sample)
-                self._accounting[sample.__class__.__name__] += 1
+                self.accounting[sample.__class__.__name__] += 1
             else:
                 self.storage[sample.__class__.__name__] = [sample]
-                self._accounting[sample.__class__.__name__] = 1
+                self.accounting[sample.__class__.__name__] = 1
 
         if isinstance(item, list):
             for i in item:
@@ -74,27 +90,45 @@ class Warehouse:
         else:
             take(item)
 
+    def _clean_category(self):
+        """Removing category from self.storage and self.accounting dicts if 0 items in accounted category"""
+        while 0 in self.accounting.values():
+            for k, v in self.accounting.items():
+                if v == 0:
+                    del self.accounting[k]
+                    del self.storage[k]
+                    break
+
+    def _find_requested_items(self, product):
+        count_suitable = 0
+        for items_category in self.storage.values():
+            count_suitable += sum(1 for position in items_category if product == f"{position.brand} {position.model}")
+        print(f'\033[92mFound {count_suitable} matches of {product}\033[0m')
+
+        return count_suitable
+
     def transfer(self, item, department, amount=1):
         """
-        Function of transferring items to some department from warehouse
+        Items transferring protocol to some department from warehouse. If amount is not integer - set default
         :param item: item that we want to transfer
         :param department: department that will receive an item
         :param amount: amount of items passed to department
         :return: None
         """
-        count_suitable = 0
-        for items_category in self.storage.values():
-            count_suitable += sum(1 for position in items_category if item == f"{position.brand} {position.model}")
-        print(f'\033[92mFound {count_suitable} matches of {item}\033[0m')
+        # Input data validation
+        amount = _amount_validation(amount, int)
 
-        def invoice(items: list):
+        # Search items started
+        requested_items_found = self._find_requested_items(item)
+
+        def __invoice(items: list):
             """
             Function to make an invoice (summarizing) items to transfer
             :param items: items picked to transfer
             :return:
             """
             for position in items:
-                print(f"{position} passed to {department} department")
+                print(f"{position} passed to: {department} department")
 
         def packing(required_items: int):
             """
@@ -102,29 +136,29 @@ class Warehouse:
             :param required_items: amount of required items
             :return:
             """
-            for i in self.storage.values():
-                for j in i:
-                    if item == f'{j.brand} {j.model}':
-                        packing_list.append(j)
-                        i.remove(j)
-                        self._accounting[j.__class__.__name__] -= 1
+            for category in self.storage.values():
+                for prod in category:
+                    if item == f'{prod.brand} {prod.model}':
+                        packing_list.append(prod)
+                        category.remove(prod)
+                        self.accounting[prod.__class__.__name__] -= 1
                         required_items -= 1
                         break
             return required_items if required_items else 0
 
-        if count_suitable == 0:
+        if requested_items_found == 0:
             print(f'\033[91m-No {item} found in {self._wh_type}-\033[0m')
-        elif count_suitable >= amount:
+        elif requested_items_found >= amount:
             packing_list = []
             while amount:
                 amount = packing(amount)
-            invoice(packing_list)
-        elif count_suitable < amount:
-            print(f"\033[93m-Not Enough {item} on warehouse, {count_suitable}/{amount} in stock- \033[0m")
+            __invoice(packing_list)
+        elif requested_items_found < amount:
+            print(f"\033[93m-Not Enough {item} on warehouse, {requested_items_found}/{amount} in stock- \033[0m")
             packing_list = []
-            while count_suitable:
-                count_suitable = packing(count_suitable)
-            invoice(packing_list)
+            while requested_items_found:
+                requested_items_found = packing(requested_items_found)
+            __invoice(packing_list)
 
             # Optional: create an invoice as JSON file
             # with open(f'{some_invoice_name}_{some_invoice_counter}', 'w', encoding='utf-8') as F:
@@ -132,13 +166,7 @@ class Warehouse:
             #
             # Then unpack the JSON data into some WMS form and print Invoice based on packing list
 
-        """Removing category from warehouse dict if 0 items in accounted category"""
-        while 0 in self._accounting.values():
-            for k, v in self._accounting.items():
-                if v == 0:
-                    del self._accounting[k]
-                    del self.storage[k]
-                    break
+        self._clean_category()
 
     def __iter__(self):
         return self.storage.__iter__()
@@ -146,7 +174,7 @@ class Warehouse:
     def __str__(self):
         _spacer = '-' * 10
         _type = f'Warehouse type: {self._wh_type}\n'
-        _value = '\n'.join((f"{k:>8} ({self._accounting[k]}): "
+        _value = '\n'.join((f"{k:>8} ({self.accounting[k]}): "
                             f"{', '.join(map(lambda i: f'{i.brand} {i.model}', self.storage[k]))}"
                            for k, v in self.storage.items()))
         return f'{_spacer}\n{_type}{_value}\n{_spacer}'
@@ -178,6 +206,7 @@ class Equipment:
         :param properties: Item attributes unpacked as kwargs
         :return: None
         """
+
         try:
             if isinstance(count, int):
                 return [cls(**properties, whole_sale=True if count >= 10 else False, ) for _ in range(count)]
@@ -226,7 +255,6 @@ class Xerox(Scanner, Printer):
     has both methods: scan/print"""
     def __init__(self, **kwargs):
         super(Xerox, self).__init__(**kwargs)
-        # self.magic = magic
 
     def __str__(self):
         return f'{self.brand} {self.model}'
@@ -258,4 +286,5 @@ if __name__ == '__main__':
     local.transfer('HP X-35', department='Not your business', amount=15)
     local.transfer('XiaoMi LiangYue', department='Somewhere inside China mainland', amount=3)
     local.transfer('Give me something', department='Greedy douche dpt', amount=99)
+    local.transfer('XiaoMi LiangYue', department='Kafedra magicheskih treugolnikov', amount='Ochen mnogo')
     print(local)
